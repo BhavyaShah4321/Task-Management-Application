@@ -6,7 +6,7 @@ const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const VALID_SORT_FIELDS = ['createdAt', 'dueDate', 'priority'];
 const VALID_SORT_ORDERS = ['asc', 'desc'];
-const VALID_STATUSES   = ['Pending', 'In Progress', 'Completed'];
+const VALID_STATUSES = ['Pending', 'In Progress', 'Completed'];
 const VALID_PRIORITIES = ['Low', 'Medium', 'High'];
 
 // GET /api/tasks — supports search, filter, sort, pagination
@@ -15,8 +15,8 @@ const getTasks = async (req, res) => {
     search,
     status,
     priority,
-    sortBy     = 'createdAt',
-    sortOrder  = 'desc',
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
     page,
     limit,
   } = req.query;
@@ -37,8 +37,8 @@ const getTasks = async (req, res) => {
 
   // Safe page / limit parsing
   const pageNumber = Math.max(parseInt(page) || 1, 1);
-  const pageSize   = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
-  const skip       = (pageNumber - 1) * pageSize;
+  const pageSize = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
+  const skip = (pageNumber - 1) * pageSize;
 
   // Build MongoDB filter — always scoped to the current user
   const query = { user: req.user._id };
@@ -142,11 +142,11 @@ const updateTask = async (req, res) => {
 
     const { title, description, priority, status, dueDate } = req.body;
 
-    if (title !== undefined)       task.title       = title;
+    if (title !== undefined) task.title = title;
     if (description !== undefined) task.description = description;
-    if (priority !== undefined)    task.priority    = priority;
-    if (status !== undefined)      task.status      = status;
-    if (dueDate !== undefined)     task.dueDate     = dueDate;
+    if (priority !== undefined) task.priority = priority;
+    if (status !== undefined) task.status = status;
+    if (dueDate !== undefined) task.dueDate = dueDate;
 
     await task.save();
 
