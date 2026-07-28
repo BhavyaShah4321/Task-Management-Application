@@ -1,8 +1,9 @@
 import api from './api';
 
-const getTasks = async () => {
-  const response = await api.get('/tasks');
-  return response.data.data.tasks;
+// params: { page, limit, search, status, priority, sortBy, sortOrder }
+const getTasks = async (params = {}) => {
+  const response = await api.get('/tasks', { params });
+  return response.data.data; // { tasks, pagination }
 };
 
 const createTask = async (data) => {

@@ -2,17 +2,81 @@ import mongoose from 'mongoose';
 import { validationResult } from 'express-validator';
 import Task from '../models/Task.js';
 
-// Return 404 for invalid Mongo IDs instead of letting Mongoose throw a CastError
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// GET /api/tasks — return only the logged-in user's tasks
+const VALID_SORT_FIELDS = ['createdAt', 'dueDate', 'priority'];
+const VALID_SORT_ORDERS = ['asc', 'desc'];
+const VALID_STATUSES   = ['Pending', 'In Progress', 'Completed'];
+const VALID_PRIORITIES = ['Low', 'Medium', 'High'];
+
+// GET /api/tasks — supports search, filter, sort, pagination
 const getTasks = async (req, res) => {
+  const {
+    search,
+    status,
+    priority,
+    sortBy     = 'createdAt',
+    sortOrder  = 'desc',
+    page,
+    limit,
+  } = req.query;
+
+  // Validate enum-style query params
+  if (status && !VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ success: false, message: 'Invalid status value' });
+  }
+  if (priority && !VALID_PRIORITIES.includes(priority)) {
+    return res.status(400).json({ success: false, message: 'Invalid priority value' });
+  }
+  if (!VALID_SORT_FIELDS.includes(sortBy)) {
+    return res.status(400).json({ success: false, message: 'Invalid sortBy value' });
+  }
+  if (!VALID_SORT_ORDERS.includes(sortOrder)) {
+    return res.status(400).json({ success: false, message: 'Invalid sortOrder value' });
+  }
+
+  // Safe page / limit parsing
+  const pageNumber = Math.max(parseInt(page) || 1, 1);
+  const pageSize   = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
+  const skip       = (pageNumber - 1) * pageSize;
+
+  // Build MongoDB filter — always scoped to the current user
+  const query = { user: req.user._id };
+
+  if (search) {
+    query.title = { $regex: search, $options: 'i' };
+  }
+  if (status) {
+    query.status = status;
+  }
+  if (priority) {
+    query.priority = priority;
+  }
+
+  // Build sort — priority sorts on the numeric priorityOrder field
+  const sortField = sortBy === 'priority' ? 'priorityOrder' : sortBy;
+  const sortDirection = sortOrder === 'asc' ? 1 : -1;
+  const sort = { [sortField]: sortDirection };
+
   try {
-    const tasks = await Task.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const [tasks, totalTasks] = await Promise.all([
+      Task.find(query).sort(sort).skip(skip).limit(pageSize),
+      Task.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalTasks / pageSize);
 
     return res.status(200).json({
       success: true,
-      data: { tasks },
+      data: {
+        tasks,
+        pagination: {
+          currentPage: pageNumber,
+          pageSize,
+          totalTasks,
+          totalPages,
+        },
+      },
     });
   } catch (error) {
     console.error('getTasks error:', error.message);
@@ -20,7 +84,7 @@ const getTasks = async (req, res) => {
   }
 };
 
-// POST /api/tasks — create a task owned by the logged-in user
+// POST /api/tasks
 const createTask = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -35,7 +99,7 @@ const createTask = async (req, res) => {
     const { title, description, priority, status, dueDate } = req.body;
 
     const task = await Task.create({
-      user: req.user._id,   // always set from token — never from req.body
+      user: req.user._id,
       title,
       description,
       priority,
@@ -54,7 +118,7 @@ const createTask = async (req, res) => {
   }
 };
 
-// PUT /api/tasks/:id — update a task that belongs to the logged-in user
+// PUT /api/tasks/:id
 const updateTask = async (req, res) => {
   if (!isValidId(req.params.id)) {
     return res.status(404).json({ success: false, message: 'Task not found' });
@@ -70,7 +134,6 @@ const updateTask = async (req, res) => {
   }
 
   try {
-    // Query by both _id and user so one user can never touch another user's task
     const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
 
     if (!task) {
@@ -79,11 +142,11 @@ const updateTask = async (req, res) => {
 
     const { title, description, priority, status, dueDate } = req.body;
 
-    if (title !== undefined) task.title = title;
+    if (title !== undefined)       task.title       = title;
     if (description !== undefined) task.description = description;
-    if (priority !== undefined) task.priority = priority;
-    if (status !== undefined) task.status = status;
-    if (dueDate !== undefined) task.dueDate = dueDate;
+    if (priority !== undefined)    task.priority    = priority;
+    if (status !== undefined)      task.status      = status;
+    if (dueDate !== undefined)     task.dueDate     = dueDate;
 
     await task.save();
 
@@ -98,7 +161,7 @@ const updateTask = async (req, res) => {
   }
 };
 
-// DELETE /api/tasks/:id — delete a task that belongs to the logged-in user
+// DELETE /api/tasks/:id
 const deleteTask = async (req, res) => {
   if (!isValidId(req.params.id)) {
     return res.status(404).json({ success: false, message: 'Task not found' });

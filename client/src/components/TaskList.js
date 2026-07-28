@@ -6,9 +6,20 @@ import dayjs from 'dayjs';
 const { Text } = Typography;
 
 const priorityColors = { Low: 'green', Medium: 'orange', High: 'red' };
-const statusColors = { Pending: 'default', 'In Progress': 'blue', Completed: 'success' };
+const statusColors   = { Pending: 'default', 'In Progress': 'blue', Completed: 'success' };
 
-const TaskList = ({ tasks, actionLoading, onEdit, onDelete, onMarkCompleted }) => {
+const TaskList = ({
+  tasks,
+  actionLoading,
+  onEdit,
+  onDelete,
+  onMarkCompleted,
+  // pagination props
+  page,
+  pageSize,
+  totalTasks,
+  onPageChange,
+}) => {
   const columns = [
     {
       title: 'Title',
@@ -24,10 +35,7 @@ const TaskList = ({ tasks, actionLoading, onEdit, onDelete, onMarkCompleted }) =
       key: 'description',
       width: 300,
       render: (text) => {
-        if (!text) {
-          return <Text type="secondary">—</Text>;
-        }
-
+        if (!text) return <Text type="secondary">—</Text>;
         return (
           <Tooltip
             placement="topLeft"
@@ -46,14 +54,7 @@ const TaskList = ({ tasks, actionLoading, onEdit, onDelete, onMarkCompleted }) =
               </div>
             }
           >
-            <Text
-              ellipsis
-              style={{
-                display: 'block',
-                maxWidth: 280,
-                cursor: 'pointer',
-              }}
-            >
+            <Text ellipsis style={{ display: 'block', maxWidth: 280, cursor: 'pointer' }}>
               {text}
             </Text>
           </Tooltip>
@@ -103,7 +104,6 @@ const TaskList = ({ tasks, actionLoading, onEdit, onDelete, onMarkCompleted }) =
               Complete
             </Button>
           )}
-
           <Button
             size="small"
             icon={<EditOutlined />}
@@ -111,7 +111,6 @@ const TaskList = ({ tasks, actionLoading, onEdit, onDelete, onMarkCompleted }) =
           >
             Edit
           </Button>
-
           <Popconfirm
             title="Delete this task?"
             description="This action cannot be undone."
@@ -120,12 +119,7 @@ const TaskList = ({ tasks, actionLoading, onEdit, onDelete, onMarkCompleted }) =
             okButtonProps={{ danger: true }}
             cancelText="Cancel"
           >
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              loading={actionLoading}
-            >
+            <Button size="small" danger icon={<DeleteOutlined />} loading={actionLoading}>
               Delete
             </Button>
           </Popconfirm>
@@ -139,8 +133,16 @@ const TaskList = ({ tasks, actionLoading, onEdit, onDelete, onMarkCompleted }) =
       dataSource={tasks}
       columns={columns}
       rowKey="_id"
-      pagination={false}
       scroll={{ x: 'max-content' }}
+      pagination={{
+        current: page,
+        pageSize: pageSize,
+        total: totalTasks,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '50'],
+        showTotal: (total) => `Total ${total} tasks`,
+        onChange: (newPage, newPageSize) => onPageChange(newPage, newPageSize),
+      }}
     />
   );
 };

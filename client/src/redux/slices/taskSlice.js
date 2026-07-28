@@ -3,9 +3,9 @@ import taskService from '../../services/taskService';
 
 export const fetchTasks = createAsyncThunk(
   'tasks/fetchTasks',
-  async (_, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await taskService.getTasks();
+      return await taskService.getTasks(params); // { tasks, pagination }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || 'Failed to fetch tasks'
@@ -55,9 +55,19 @@ export const deleteTask = createAsyncThunk(
 
 const initialState = {
   tasks: [],
-  loading: false,      // used for initial list fetch
-  actionLoading: false, // used for create / update / delete
+  loading: false,
+  actionLoading: false,
   error: null,
+  // filter / sort / pagination state
+  search: '',
+  status: '',
+  priority: '',
+  sortBy: 'createdAt',
+  sortOrder: 'desc',
+  page: 1,
+  pageSize: 10,
+  totalTasks: 0,
+  totalPages: 0,
 };
 
 const taskSlice = createSlice({
@@ -66,6 +76,42 @@ const taskSlice = createSlice({
   reducers: {
     clearTaskError: (state) => {
       state.error = null;
+    },
+    setSearch: (state, action) => {
+      state.search = action.payload;
+      state.page = 1;
+    },
+    setStatus: (state, action) => {
+      state.status = action.payload;
+      state.page = 1;
+    },
+    setPriority: (state, action) => {
+      state.priority = action.payload;
+      state.page = 1;
+    },
+    setSortBy: (state, action) => {
+      state.sortBy = action.payload;
+      state.page = 1;
+    },
+    setSortOrder: (state, action) => {
+      state.sortOrder = action.payload;
+      state.page = 1;
+    },
+    setPage: (state, action) => {
+      state.page = action.payload;
+    },
+    setPageSize: (state, action) => {
+      state.pageSize = action.payload;
+      state.page = 1;
+    },
+    resetFilters: (state) => {
+      state.search = '';
+      state.status = '';
+      state.priority = '';
+      state.sortBy = 'createdAt';
+      state.sortOrder = 'desc';
+      state.page = 1;
+      // intentionally keep pageSize so the user's choice is preserved
     },
   },
   extraReducers: (builder) => {
@@ -77,55 +123,53 @@ const taskSlice = createSlice({
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
         state.loading = false;
-        state.tasks = action.payload;
+        state.tasks = action.payload.tasks;
+        state.totalTasks = action.payload.pagination.totalTasks;
+        state.totalPages = action.payload.pagination.totalPages;
+        state.page = action.payload.pagination.currentPage;
+        state.pageSize = action.payload.pagination.pageSize;
       })
       .addCase(fetchTasks.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
 
-    // createTask
+    // createTask — no optimistic update; Dashboard re-fetches after success
     builder
       .addCase(createTask.pending, (state) => {
         state.actionLoading = true;
         state.error = null;
       })
-      .addCase(createTask.fulfilled, (state, action) => {
+      .addCase(createTask.fulfilled, (state) => {
         state.actionLoading = false;
-        state.tasks.unshift(action.payload); // newest first
       })
       .addCase(createTask.rejected, (state, action) => {
         state.actionLoading = false;
         state.error = action.payload;
       });
 
-    // updateTask
+    // updateTask — no optimistic update; Dashboard re-fetches after success
     builder
       .addCase(updateTask.pending, (state) => {
         state.actionLoading = true;
         state.error = null;
       })
-      .addCase(updateTask.fulfilled, (state, action) => {
+      .addCase(updateTask.fulfilled, (state) => {
         state.actionLoading = false;
-        const index = state.tasks.findIndex((t) => t._id === action.payload._id);
-        if (index !== -1) {
-          state.tasks[index] = action.payload;
-        }
       })
       .addCase(updateTask.rejected, (state, action) => {
         state.actionLoading = false;
         state.error = action.payload;
       });
 
-    // deleteTask — payload is the deleted task's id
+    // deleteTask — no optimistic update; Dashboard re-fetches after success
     builder
       .addCase(deleteTask.pending, (state) => {
         state.actionLoading = true;
         state.error = null;
       })
-      .addCase(deleteTask.fulfilled, (state, action) => {
+      .addCase(deleteTask.fulfilled, (state) => {
         state.actionLoading = false;
-        state.tasks = state.tasks.filter((t) => t._id !== action.payload);
       })
       .addCase(deleteTask.rejected, (state, action) => {
         state.actionLoading = false;
@@ -134,6 +178,16 @@ const taskSlice = createSlice({
   },
 });
 
-export const { clearTaskError } = taskSlice.actions;
+export const {
+  clearTaskError,
+  setSearch,
+  setStatus,
+  setPriority,
+  setSortBy,
+  setSortOrder,
+  setPage,
+  setPageSize,
+  resetFilters,
+} = taskSlice.actions;
 
 export default taskSlice.reducer;

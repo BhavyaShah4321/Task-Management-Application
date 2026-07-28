@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 
+// Numeric weight used for correct priority sorting at the DB level.
+// Alphabetical sort of 'High'/'Low'/'Medium' is wrong — this fixes it.
+const PRIORITY_ORDER = { Low: 1, Medium: 2, High: 3 };
+
 const taskSchema = new mongoose.Schema(
   {
     user: {
@@ -23,6 +27,11 @@ const taskSchema = new mongoose.Schema(
       enum: ['Low', 'Medium', 'High'],
       default: 'Medium',
     },
+    // Numeric mirror of priority for correct DB-level sorting
+    priorityOrder: {
+      type: Number,
+      default: 2, // Medium
+    },
     status: {
       type: String,
       enum: ['Pending', 'In Progress', 'Completed'],
@@ -35,5 +44,12 @@ const taskSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Keep priorityOrder in sync whenever priority changes
+taskSchema.pre('save', function () {
+  if (this.isModified('priority')) {
+    this.priorityOrder = PRIORITY_ORDER[this.priority] ?? 2;
+  }
+});
 
 export default mongoose.model('Task', taskSchema);
