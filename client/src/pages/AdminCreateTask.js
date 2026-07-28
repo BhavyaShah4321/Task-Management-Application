@@ -13,6 +13,7 @@ import {
   Col,
   DatePicker,
   message,
+  theme,
 } from 'antd';
 import dayjs from 'dayjs';
 import { fetchAdminUsers, assignTask } from '../redux/slices/adminSlice';
@@ -26,9 +27,10 @@ const AdminCreateTask = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  const { token } = theme.useToken();
 
   const { user } = useSelector((state) => state.auth);
-  const { users, actionLoading } = useSelector((state) => state.admin);
+  const { users, usersLoading, actionLoading } = useSelector((state) => state.admin);
 
   useEffect(() => {
     dispatch(fetchAdminUsers());
@@ -54,7 +56,7 @@ const AdminCreateTask = () => {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
+    <Layout style={{ minHeight: '100vh', background: token.colorBgLayout }}>
       <AppHeader user={user} />
 
       <Content style={{ padding: '24px' }}>
@@ -84,6 +86,7 @@ const AdminCreateTask = () => {
                 <Select
                   placeholder="Select a user"
                   showSearch
+                  loading={usersLoading}
                   filterOption={(input, option) =>
                     (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                   }

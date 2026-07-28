@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Form, Input, Button, Card, Typography, Alert } from 'antd';
-import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Typography, Alert, theme } from 'antd';
+import { UserOutlined, MailOutlined, LockOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons';
 import { registerUser, clearError } from '../redux/slices/authSlice';
+import { useTheme } from '../context/ThemeContext';
 
 const { Title, Text } = Typography;
 
@@ -12,6 +13,8 @@ const Register = () => {
   const navigate = useNavigate();
   const { loading, error, token } = useSelector((state) => state.auth);
   const [form] = Form.useForm();
+  const { isDarkMode, toggleTheme } = useTheme();
+  const { token: themeToken } = theme.useToken();
 
   // If already authenticated, go to dashboard
   useEffect(() => {
@@ -40,14 +43,21 @@ const Register = () => {
   };
 
   return (
-    <div style={pageStyle}>
+    <div style={{ ...pageStyle, background: themeToken.colorBgLayout }}>
       <Card style={cardStyle}>
-        <Title level={3} style={{ marginBottom: 4 }}>
-          Create Account
-        </Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-          Sign up to get started
-        </Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <div>
+            <Title level={3} style={{ marginBottom: 4 }}>
+              Create Account
+            </Title>
+            <Text type="secondary">Sign up to get started</Text>
+          </div>
+          <Button
+            icon={isDarkMode ? <SunOutlined /> : <MoonOutlined />}
+            onClick={toggleTheme}
+            title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+          />
+        </div>
 
         {error && (
           <Alert
@@ -91,7 +101,7 @@ const Register = () => {
             label="Password"
             name="password"
             rules={[
-              { required: true, message: 'Please enter a password' },
+              { required: true, message: 'Please enter your password' },
               { min: 8, message: 'Password must be at least 8 characters' },
             ]}
           >
@@ -152,7 +162,6 @@ const pageStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: '#f5f5f5',
   padding: '16px',
 };
 

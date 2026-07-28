@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Form, Input, Button, Card, Typography, Alert } from 'antd';
-import { MailOutlined, LockOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Typography, Alert, theme } from 'antd';
+import { MailOutlined, LockOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons';
 import { loginUser, clearError } from '../redux/slices/authSlice';
+import { useTheme } from '../context/ThemeContext';
 
 const { Title, Text } = Typography;
 
@@ -11,6 +12,8 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, token } = useSelector((state) => state.auth);
+  const { isDarkMode, toggleTheme } = useTheme();
+  const { token: themeToken } = theme.useToken();
 
   // If already authenticated, go to dashboard
   useEffect(() => {
@@ -38,14 +41,21 @@ const Login = () => {
   };
 
   return (
-    <div style={pageStyle}>
+    <div style={{ ...pageStyle, background: themeToken.colorBgLayout }}>
       <Card style={cardStyle}>
-        <Title level={3} style={{ marginBottom: 4 }}>
-          Welcome back
-        </Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-          Log in to your account
-        </Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <div>
+            <Title level={3} style={{ marginBottom: 4 }}>
+              Welcome back
+            </Title>
+            <Text type="secondary">Log in to your account</Text>
+          </div>
+          <Button
+            icon={isDarkMode ? <SunOutlined /> : <MoonOutlined />}
+            onClick={toggleTheme}
+            title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+          />
+        </div>
 
         {error && (
           <Alert
@@ -111,7 +121,6 @@ const pageStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: '#f5f5f5',
   padding: '16px',
 };
 

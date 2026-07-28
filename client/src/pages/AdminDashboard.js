@@ -9,7 +9,6 @@ import {
   Statistic,
   Row,
   Col,
-  Spin,
   Alert,
   Space,
   Table,
@@ -17,6 +16,8 @@ import {
   Select,
   Empty,
   Tooltip,
+  theme,
+  Skeleton,
 } from 'antd';
 import {
   UserOutlined,
@@ -51,6 +52,7 @@ const { Option } = Select;
 const AdminDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { token } = theme.useToken();
 
   const { user } = useSelector((state) => state.auth);
   const {
@@ -187,7 +189,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
+    <Layout style={{ minHeight: '100vh', background: token.colorBgLayout }}>
       <AppHeader user={user} />
 
       <Content style={{ padding: '24px' }}>
@@ -208,9 +210,33 @@ const AdminDashboard = () => {
         )}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <Spin size="large" />
-          </div>
+          <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
+            <Col xs={24} sm={12} lg={8}>
+              <Card>
+                <Skeleton active />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={8}>
+              <Card>
+                <Skeleton active />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={8}>
+              <Card>
+                <Skeleton active />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={8}>
+              <Card>
+                <Skeleton active />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={8}>
+              <Card>
+                <Skeleton active />
+              </Card>
+            </Col>
+          </Row>
         ) : stats ? (
           <>
             <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
@@ -356,9 +382,7 @@ const AdminDashboard = () => {
               </Space>
 
               {tasksLoading ? (
-                <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                  <Spin size="large" />
-                </div>
+                <Skeleton active paragraph={{ rows: 5 }} />
               ) : tasks.length === 0 ? (
                 <Empty description="No tasks found" style={{ padding: '48px 0' }} />
               ) : (
@@ -366,7 +390,6 @@ const AdminDashboard = () => {
                   columns={columns}
                   dataSource={tasks}
                   rowKey="_id"
-                  loading={tasksLoading}
                   pagination={{
                     current: page,
                     pageSize,

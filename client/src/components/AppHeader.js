@@ -1,9 +1,10 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Typography, Button, Tag, Space } from 'antd';
-import { LogoutOutlined } from '@ant-design/icons';
+import { Layout, Typography, Button, Tag, Space, theme } from 'antd';
+import { LogoutOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons';
 import { logout } from '../redux/slices/authSlice';
+import { useTheme } from '../context/ThemeContext';
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -12,6 +13,8 @@ const AppHeader = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const { isDarkMode, toggleTheme } = useTheme();
+  const { token } = theme.useToken();
 
   const handleLogout = () => {
     dispatch(logout());
@@ -25,7 +28,7 @@ const AppHeader = ({ user, onLogout }) => {
   return (
     <Header
       style={{
-        background: '#ffffff',
+        background: token.colorBgContainer,
         padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
@@ -41,6 +44,11 @@ const AppHeader = ({ user, onLogout }) => {
             {user?.role}
           </Tag>
         </Text>
+        <Button
+          icon={isDarkMode ? <SunOutlined /> : <MoonOutlined />}
+          onClick={toggleTheme}
+          title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+        />
         {isAdmin && (
           <>
             <Button

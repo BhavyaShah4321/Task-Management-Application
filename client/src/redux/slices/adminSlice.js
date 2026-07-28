@@ -58,6 +58,7 @@ const initialState = {
   users: [],
   tasks: [],
   loading: false,
+  usersLoading: false,
   tasksLoading: false,
   actionLoading: false,
   error: null,
@@ -136,15 +137,15 @@ const adminSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(fetchAdminUsers.pending, (state) => {
-        state.loading = true;
+        state.usersLoading = true;
         state.error = null;
       })
       .addCase(fetchAdminUsers.fulfilled, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.users = action.payload;
       })
       .addCase(fetchAdminUsers.rejected, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.error = action.payload;
       })
       .addCase(fetchAdminTasks.pending, (state) => {

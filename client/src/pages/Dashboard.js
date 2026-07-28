@@ -7,11 +7,12 @@ import {
   Button,
   Modal,
   Empty,
-  Spin,
   message,
   Input,
   Select,
   Flex,
+  theme,
+  Skeleton,
 } from 'antd';
 import {
   PlusOutlined,
@@ -44,6 +45,7 @@ const { Option } = Select;
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { token } = theme.useToken();
 
   const { user } = useSelector((state) => state.auth);
   const {
@@ -195,7 +197,7 @@ const Dashboard = () => {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
+    <Layout style={{ minHeight: '100vh', background: token.colorBgLayout }}>
       <AppHeader user={user} />
 
       <Content style={{ padding: '24px' }}>
@@ -280,9 +282,16 @@ const Dashboard = () => {
 
         {/* Task list / empty / loading */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <Spin size="large" />
-          </div>
+          <>
+            <Skeleton.Input style={{ width: 200, marginBottom: 16 }} active />
+            <Skeleton.Input style={{ width: 260, marginBottom: 16 }} active />
+            <Skeleton.Input style={{ width: 140, marginBottom: 16 }} active />
+            <Skeleton.Input style={{ width: 140, marginBottom: 16 }} active />
+            <Skeleton.Input style={{ width: 150, marginBottom: 16 }} active />
+            <Skeleton.Input style={{ width: 130, marginBottom: 16 }} active />
+            <Skeleton.Input style={{ width: 80, marginBottom: 16 }} active />
+            <Skeleton active paragraph={{ rows: 5 }} />
+          </>
         ) : tasks.length === 0 ? (
           <Empty description="No tasks found" style={{ padding: '48px 0' }}>
             <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
