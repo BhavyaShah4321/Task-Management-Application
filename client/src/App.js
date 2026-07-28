@@ -3,9 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCurrentUser } from './redux/slices/authSlice';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminCreateTask from './pages/AdminCreateTask';
 
 function App() {
   const dispatch = useDispatch();
@@ -30,6 +33,24 @@ function App() {
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/tasks/create"
+          element={
+            <AdminRoute>
+              <AdminCreateTask />
+            </AdminRoute>
           }
         />
 

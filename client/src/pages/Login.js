@@ -28,7 +28,12 @@ const Login = () => {
     const result = await dispatch(loginUser(values));
 
     if (loginUser.fulfilled.match(result)) {
-      navigate('/dashboard', { replace: true });
+      const userRole = result.payload.user.role;
+      if (userRole === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
   };
 

@@ -5,9 +5,7 @@ import {
   Layout,
   Typography,
   Button,
-  Tag,
   Modal,
-  Space,
   Empty,
   Spin,
   message,
@@ -17,11 +15,9 @@ import {
 } from 'antd';
 import {
   PlusOutlined,
-  LogoutOutlined,
   SearchOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { logout } from '../redux/slices/authSlice';
 import {
   fetchTasks,
   createTask,
@@ -39,9 +35,10 @@ import {
 } from '../redux/slices/taskSlice';
 import TaskForm from '../components/TaskForm';
 import TaskList from '../components/TaskList';
+import AppHeader from '../components/AppHeader';
 
-const { Header, Content } = Layout;
-const { Title, Text } = Typography;
+const { Content } = Layout;
+const { Title } = Typography;
 const { Option } = Select;
 
 const Dashboard = () => {
@@ -64,7 +61,7 @@ const Dashboard = () => {
     totalTasks,
   } = useSelector((state) => state.tasks);
 
-  const [modalOpen, setModalOpen]   = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
 
   // Local value for the search input so the user can type freely
@@ -76,8 +73,8 @@ const Dashboard = () => {
     () => ({
       page,
       limit: pageSize,
-      ...(search   && { search }),
-      ...(status   && { status }),
+      ...(search && { search }),
+      ...(status && { status }),
       ...(priority && { priority }),
       sortBy,
       sortOrder,
@@ -98,6 +95,13 @@ const Dashboard = () => {
     }
   }, [error, dispatch]);
 
+  // Redirect admin users to /admin
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      navigate('/admin', { replace: true });
+    }
+  }, [user, navigate]);
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   // After a mutation, decide which page to re-fetch.
@@ -112,11 +116,6 @@ const Dashboard = () => {
   };
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login', { replace: true });
-  };
 
   // ── Search ────────────────────────────────────────────────────────────────
 
@@ -150,8 +149,8 @@ const Dashboard = () => {
   // ── Modal ─────────────────────────────────────────────────────────────────
 
   const openCreateModal = () => { setEditingTask(null); setModalOpen(true); };
-  const openEditModal   = (task) => { setEditingTask(task); setModalOpen(true); };
-  const closeModal      = () => { setModalOpen(false); setEditingTask(null); };
+  const openEditModal = (task) => { setEditingTask(task); setModalOpen(true); };
+  const closeModal = () => { setModalOpen(false); setEditingTask(null); };
 
   // ── CRUD handlers ─────────────────────────────────────────────────────────
 
@@ -197,30 +196,7 @@ const Dashboard = () => {
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
-      {/* Header */}
-      <Header
-        style={{
-          background: '#ffffff',
-          padding: '0 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-        }}
-      >
-        <Title level={4} style={{ margin: 0 }}>Task Manager</Title>
-        <Space>
-          <Text>
-            {user?.name}&nbsp;
-            <Tag color="blue" style={{ textTransform: 'capitalize' }}>
-              {user?.role}
-            </Tag>
-          </Text>
-          <Button icon={<LogoutOutlined />} onClick={handleLogout} danger>
-            Logout
-          </Button>
-        </Space>
-      </Header>
+      <AppHeader user={user} />
 
       <Content style={{ padding: '24px' }}>
         {/* Toolbar — title + create button */}
